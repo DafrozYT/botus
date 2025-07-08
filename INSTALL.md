@@ -197,10 +197,20 @@ STRIPE_PUBLIC_KEY=pk_live_ваш_публичный_ключ
 STRIPE_SECRET_KEY=sk_live_ваш_секретный_ключ
 ```
 
-### Шаг 3: Генерация Laravel ключей
+### Шаг 3: Исправление Laravel файлов
+```bash
+# Перейдите в корень проекта
+cd ~/hitmanki-cases
+
+# Исправьте недостающие Laravel файлы
+chmod +x fix-laravel-files.sh
+./fix-laravel-files.sh
+```
+
+### Шаг 4: Генерация Laravel ключей
 ```bash
 # Перейдите в папку frontend
-cd ../frontend
+cd frontend
 
 # Сгенерируйте ключ приложения (запишите его)
 php artisan key:generate --show
@@ -224,7 +234,7 @@ APP_KEY=base64:сгенерированный_ключ_frontend
 ADMIN_APP_KEY=base64:сгенерированный_ключ_admin
 ```
 
-### Шаг 4: Создание необходимых папок
+### Шаг 5: Создание необходимых папок
 ```bash
 # Создайте папки для SSL сертификатов и логов
 mkdir -p ssl logs

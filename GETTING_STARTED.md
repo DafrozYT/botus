@@ -79,8 +79,12 @@ sudo ./setup-vds.sh
 # Переключитесь на рабочего пользователя
 su - hitmanki
 
-# Перейдите в проект
-cd ~/hitmanki-cases/docker
+# Перейдите в проект и исправьте Laravel файлы
+cd ~/hitmanki-cases
+./fix-laravel-files.sh
+
+# Перейдите в docker папку
+cd docker
 
 # Сгенерируйте секреты
 ./generate-secrets.sh

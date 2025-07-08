@@ -50,10 +50,19 @@ JWT_SECRET=случайная_строка_минимум_32_символа
 SERVER_SEED_SECRET=другая_случайная_строка
 ```
 
-### 5. Генерация Laravel ключей (1 минута)
+### 5. Исправление Laravel файлов (1 минута)
+```bash
+# Перейдите в корень проекта
+cd ~/hitmanki-cases
+
+# Исправьте недостающие Laravel файлы
+./fix-laravel-files.sh
+```
+
+### 6. Генерация Laravel ключей (1 минута)
 ```bash
 # Frontend ключ
-cd ../frontend
+cd frontend
 php artisan key:generate --show
 # Скопируйте результат
 
@@ -75,21 +84,21 @@ APP_KEY=base64:ваш_frontend_ключ
 ADMIN_APP_KEY=base64:ваш_admin_ключ
 ```
 
-### 6. Проверка конфигурации (1 минута)
+### 7. Проверка конфигурации (1 минута)
 ```bash
 # Проверьте все настройки
 chmod +x check-config.sh
 ./check-config.sh
 ```
 
-### 7. Развертывание (10-15 минут)
+### 8. Развертывание (10-15 минут)
 ```bash
 # Запустите автоматическое развертывание
 chmod +x deploy-hitmanki.sh
 ./deploy-hitmanki.sh
 ```
 
-### 8. Финальная проверка (2 минуты)
+### 9. Финальная проверка (2 минуты)
 ```bash
 # Проверьте статус сервисов
 docker-compose -f docker-compose.production.yml ps

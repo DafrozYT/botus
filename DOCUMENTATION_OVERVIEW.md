@@ -70,6 +70,13 @@
 - ✅ Установка Docker
 - ✅ Клонирование проекта
 
+### **[fix-laravel-files.sh](fix-laravel-files.sh)**
+**Исправление недостающих Laravel файлов**
+- ✅ Создание artisan файлов
+- ✅ Создание bootstrap/app.php
+- ✅ Создание стандартных routes файлов
+- ✅ Проверка структуры Laravel приложений
+
 **Использование:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ваш-репозиторий/hitmanki-cases/main/setup-vds.sh -o setup-vds.sh

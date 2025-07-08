@@ -220,7 +220,10 @@ else
 fi
 
 cd hitmanki-cases
-chmod +x docker/*.sh
+chmod +x docker/*.sh fix-laravel-files.sh
+
+# Fix missing Laravel files
+./fix-laravel-files.sh
 
 # Create necessary directories
 mkdir -p docker/ssl docker/logs

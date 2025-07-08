@@ -380,7 +380,10 @@ ls -la docker/
 # Должны быть: docker-compose.production.yml nginx.conf deploy-hitmanki.sh .env.production
 
 # Сделайте скрипты исполняемыми
-chmod +x docker/*.sh
+chmod +x docker/*.sh fix-laravel-files.sh
+
+# Исправьте недостающие Laravel файлы
+./fix-laravel-files.sh
 ```
 
 ---

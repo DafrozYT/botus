@@ -85,6 +85,7 @@ sudo ./setup-vds.sh
 - ✅ Установку Docker
 - ✅ Настройку файрвола
 - ✅ Клонирование проекта
+- ✅ Исправление Laravel файлов
 
 ### Prerequisites
 - Docker & Docker Compose
