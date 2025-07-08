@@ -56,10 +56,18 @@ project-root/
 
 ## 📦 Installation
 
+### 🚀 Быстрая установка (Рекомендуется)
+
+Для быстрого развертывания используйте наши готовые инструкции:
+
+- **⚡ [Быстрый запуск](QUICK_START.md)** - 30-40 минут до полного развертывания
+- **📋 [Подробная установка](INSTALL.md)** - Пошаговое руководство с объяснениями
+- **🚀 [Руководство развертывания](DEPLOYMENT.md)** - Детали для продакшена
+
 ### Prerequisites
 - Docker & Docker Compose
 - Node.js 18+ (for local development)
-- PHP 8.1+ (for local development)
+- PHP 8.1+ (for local development)  
 - Steam API Key
 
 ### Quick Start with Docker
@@ -248,6 +256,14 @@ Users can verify any case opening result by:
 - `user_connected` / `user_disconnected` - User status updates
 
 ## 🚀 Deployment на hitmanki.store
+
+### 🛠️ Скрипты помощники
+
+В папке `docker/` доступны полезные скрипты:
+
+- **`generate-secrets.sh`** - Генерация безопасных паролей и ключей
+- **`check-config.sh`** - Проверка конфигурации перед развертыванием  
+- **`deploy-hitmanki.sh`** - Автоматическое развертывание в продакшен
 
 ### Production Deployment
 1. **Настройка домена**
