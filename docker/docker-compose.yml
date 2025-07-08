@@ -4,12 +4,12 @@ services:
   # MongoDB for backend data
   mongodb:
     image: mongo:7
-    container_name: case_opening_mongo
+    container_name: hitmanki_mongo
     restart: unless-stopped
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password123
-      MONGO_INITDB_DATABASE: case_opening
+      MONGO_INITDB_DATABASE: hitmanki_cases
     ports:
       - "27017:27017"
     volumes:
@@ -21,23 +21,23 @@ services:
   # Redis for caching and sessions
   redis:
     image: redis:7-alpine
-    container_name: case_opening_redis
+    container_name: hitmanki_redis
     restart: unless-stopped
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
-      - case_opening_network
+      - hitmanki_network
 
   # MySQL for Laravel frontend
   mysql:
     image: mysql:8.0
-    container_name: case_opening_mysql
+    container_name: hitmanki_mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: case_opening_frontend
+      MYSQL_DATABASE: hitmanki_frontend
       MYSQL_USER: laravel
       MYSQL_PASSWORD: laravelpassword
     ports:
@@ -52,48 +52,56 @@ services:
     build:
       context: ../backend
       dockerfile: ../docker/Dockerfile.backend
-    container_name: case_opening_backend
+    container_name: hitmanki_backend
     restart: unless-stopped
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/case_opening?authSource=admin
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/hitmanki_cases?authSource=admin
       - REDIS_URL=redis://redis:6379
-      - JWT_SECRET=your_super_secret_jwt_key_here_change_in_production
+      - JWT_SECRET=hitmanki_super_secret_jwt_key_2024_production_v1
       - STEAM_API_KEY=your_steam_api_key_here
-      - FRONTEND_URL=http://localhost:8000
-      - ADMIN_URL=http://localhost:8001
+      - STEAM_CALLBACK_URL=https://hitmanki.store/api/auth/steam/callback
+      - FRONTEND_URL=https://hitmanki.store
+      - ADMIN_URL=https://admin.hitmanki.store
+      - WS_CORS_ORIGIN=https://hitmanki.store
+      - TRUST_PROXY=true
     ports:
       - "3000:3000"
     depends_on:
       - mongodb
       - redis
-    volumes:
+          volumes:
       - ../backend:/app
       - /app/node_modules
     networks:
-      - case_opening_network
+      - hitmanki_network
 
   # Laravel Frontend
   frontend:
     build:
       context: ../frontend
       dockerfile: ../docker/Dockerfile.frontend
-    container_name: case_opening_frontend
+    container_name: hitmanki_frontend
     restart: unless-stopped
     environment:
+      - APP_NAME=Hitmanki Cases
       - APP_ENV=production
       - APP_DEBUG=false
+      - APP_URL=https://hitmanki.store
       - DB_CONNECTION=mysql
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_DATABASE=case_opening_frontend
+      - DB_DATABASE=hitmanki_frontend
       - DB_USERNAME=laravel
       - DB_PASSWORD=laravelpassword
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - BACKEND_API_URL=http://backend:3000/api
-      - BACKEND_WS_URL=ws://localhost:3000
+      - BACKEND_API_URL=https://api.hitmanki.store
+      - BACKEND_WS_URL=wss://api.hitmanki.store
+      - SESSION_DOMAIN=.hitmanki.store
+      - SESSION_SECURE_COOKIE=true
+      - FORCE_HTTPS=true
     ports:
       - "8000:80"
     depends_on:
@@ -103,27 +111,32 @@ services:
     volumes:
       - ../frontend:/var/www/html
     networks:
-      - case_opening_network
+      - hitmanki_network
 
   # Laravel Admin
   admin:
     build:
       context: ../admin
       dockerfile: ../docker/Dockerfile.admin
-    container_name: case_opening_admin
+    container_name: hitmanki_admin
     restart: unless-stopped
     environment:
+      - APP_NAME=Hitmanki Admin
       - APP_ENV=production
       - APP_DEBUG=false
+      - APP_URL=https://admin.hitmanki.store
       - DB_CONNECTION=mysql
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_DATABASE=case_opening_admin
+      - DB_DATABASE=hitmanki_admin
       - DB_USERNAME=laravel
       - DB_PASSWORD=laravelpassword
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - BACKEND_API_URL=http://backend:3000/api
+      - BACKEND_API_URL=https://api.hitmanki.store
+      - SESSION_DOMAIN=.hitmanki.store
+      - SESSION_SECURE_COOKIE=true
+      - FORCE_HTTPS=true
     ports:
       - "8001:80"
     depends_on:
@@ -133,12 +146,12 @@ services:
     volumes:
       - ../admin:/var/www/html
     networks:
-      - case_opening_network
+      - hitmanki_network
 
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: case_opening_nginx
+    container_name: hitmanki_nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -146,12 +159,13 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./ssl:/etc/nginx/ssl:ro
+      - ./logs:/var/log/nginx
     depends_on:
       - frontend
       - admin
       - backend
     networks:
-      - case_opening_network
+      - hitmanki_network
 
 volumes:
   mongodb_data:
@@ -162,5 +176,5 @@ volumes:
     driver: local
 
 networks:
-  case_opening_network:
+  hitmanki_network:
     driver: bridge

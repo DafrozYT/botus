@@ -1,0 +1,246 @@
+version: '3.8'
+
+services:
+  # MongoDB for backend data
+  mongodb:
+    image: mongo:7
+    container_name: hitmanki_mongo_prod
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-securepassword2024}
+      MONGO_INITDB_DATABASE: hitmanki_cases
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo/mongod.conf:/etc/mongod.conf:ro
+      - ./mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro
+    command: ["mongod", "--config", "/etc/mongod.conf"]
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis for caching and sessions
+  redis:
+    image: redis:7-alpine
+    container_name: hitmanki_redis_prod
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MySQL for Laravel frontend
+  mysql:
+    image: mysql:8.0
+    container_name: hitmanki_mysql_prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootsecurepassword2024}
+      MYSQL_DATABASE: hitmanki_frontend
+      MYSQL_USER: laravel
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-laravelsecurepassword2024}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Node.js Backend
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../docker/Dockerfile.backend
+      args:
+        NODE_ENV: production
+    container_name: hitmanki_backend_prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-securepassword2024}@mongodb:27017/hitmanki_cases?authSource=admin
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=${JWT_SECRET:-hitmanki_super_secret_jwt_key_2024_production_v1}
+      - STEAM_API_KEY=${STEAM_API_KEY}
+      - STEAM_CALLBACK_URL=https://hitmanki.store/api/auth/steam/callback
+      - FRONTEND_URL=https://hitmanki.store
+      - ADMIN_URL=https://admin.hitmanki.store
+      - WS_CORS_ORIGIN=https://hitmanki.store
+      - TRUST_PROXY=true
+      - SERVER_SEED_SECRET=${SERVER_SEED_SECRET:-hitmanki_provably_fair_secret_2024}
+      - REDIS_PREFIX=hitmanki:
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Laravel Frontend
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: ../docker/Dockerfile.frontend
+      args:
+        APP_ENV: production
+    container_name: hitmanki_frontend_prod
+    restart: unless-stopped
+    environment:
+      - APP_NAME=Hitmanki Cases
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://hitmanki.store
+      - APP_KEY=${APP_KEY}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=hitmanki_frontend
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=${MYSQL_PASSWORD:-laravelsecurepassword2024}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BACKEND_API_URL=https://api.hitmanki.store
+      - BACKEND_WS_URL=wss://api.hitmanki.store
+      - SESSION_DOMAIN=.hitmanki.store
+      - SESSION_SECURE_COOKIE=true
+      - FORCE_HTTPS=true
+      - STEAM_API_KEY=${STEAM_API_KEY}
+      - MAIL_FROM_ADDRESS=noreply@hitmanki.store
+      - MAIL_FROM_NAME=Hitmanki Cases
+    depends_on:
+      - mysql
+      - redis
+      - backend
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Laravel Admin
+  admin:
+    build:
+      context: ../admin
+      dockerfile: ../docker/Dockerfile.admin
+      args:
+        APP_ENV: production
+    container_name: hitmanki_admin_prod
+    restart: unless-stopped
+    environment:
+      - APP_NAME=Hitmanki Admin
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://admin.hitmanki.store
+      - APP_KEY=${ADMIN_APP_KEY}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=hitmanki_admin
+      - DB_USERNAME=laravel
+      - DB_PASSWORD=${MYSQL_PASSWORD:-laravelsecurepassword2024}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - BACKEND_API_URL=https://api.hitmanki.store
+      - SESSION_DOMAIN=.hitmanki.store
+      - SESSION_SECURE_COOKIE=true
+      - FORCE_HTTPS=true
+    depends_on:
+      - mysql
+      - redis
+      - backend
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: hitmanki_nginx_prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs:/var/log/nginx
+      - nginx_cache:/var/cache/nginx
+    depends_on:
+      - frontend
+      - admin
+      - backend
+    networks:
+      - hitmanki_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Log aggregator (optional for production monitoring)
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.8.0
+    container_name: hitmanki_filebeat
+    restart: unless-stopped
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./logs:/var/log/nginx:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - ELASTICSEARCH_HOSTS=${ELASTICSEARCH_HOSTS:-http://localhost:9200}
+    networks:
+      - hitmanki_network
+    depends_on:
+      - nginx
+    profiles:
+      - monitoring
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  mysql_data:
+    driver: local
+  nginx_cache:
+    driver: local
+
+networks:
+  hitmanki_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

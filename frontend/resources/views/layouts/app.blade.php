@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>{{ config('app.name', 'Case Opening') }} - @yield('title', 'Open Cases & Win Amazing Items')</title>
-    <meta name="description" content="@yield('description', config('app.description', 'Open cases and win amazing items with our provably fair system!'))">
+    <title>{{ config('app.name', 'Hitmanki Cases') }} - @yield('title', 'Открывай кейсы и выигрывай потрясающие предметы!')</title>
+    <meta name="description" content="@yield('description', config('app.description', 'Платформа для открытия кейсов с алгоритмом Provably Fair на hitmanki.store'))">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -22,8 +22,8 @@
     <!-- WebSocket Configuration -->
     <script>
         window.BackendConfig = {
-            apiUrl: '{{ config('services.backend.api_url') }}',
-            wsUrl: '{{ config('services.backend.ws_url') }}',
+            apiUrl: 'https://api.hitmanki.store',
+            wsUrl: 'wss://api.hitmanki.store',
             steamAuthUrl: '{{ route('auth.steam') }}',
             isAuthenticated: {{ auth()->check() ? 'true' : 'false' }},
             @auth

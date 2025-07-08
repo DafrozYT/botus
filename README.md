@@ -1,6 +1,6 @@
-# Case Opening Website
+# Hitmanki Cases - Case Opening Platform
 
-A complete case opening platform similar to CS:GO case opening sites, featuring provably fair algorithm, real-time WebSocket updates, and modern web technologies.
+Полноценная платформа для открытия кейсов с алгоритмом Provably Fair, WebSocket обновлениями в реальном времени и современными веб-технологиями. Готова к развертыванию на домене **hitmanki.store**.
 
 ## 🏗️ Architecture
 
@@ -102,9 +102,9 @@ docker-compose exec backend npm run seed
 ```
 
 5. **Access the application**
-- Frontend: http://localhost:8000
-- Admin Panel: http://localhost:8001
-- Backend API: http://localhost:3000
+- Frontend: https://hitmanki.store
+- Admin Panel: https://admin.hitmanki.store  
+- Backend API: https://api.hitmanki.store
 
 ### Local Development Setup
 
@@ -247,23 +247,49 @@ Users can verify any case opening result by:
 - `balance_updated` - User balance update
 - `user_connected` / `user_disconnected` - User status updates
 
-## 🚀 Deployment
+## 🚀 Deployment на hitmanki.store
 
 ### Production Deployment
-1. **Configure Production Environment**
-   - Set `NODE_ENV=production`
-   - Configure production database URLs
-   - Set secure JWT secrets
-   - Configure SSL certificates
+1. **Настройка домена**
+   - Настройте DNS записи для hitmanki.store:
+     - `A` запись: `hitmanki.store` → IP сервера
+     - `CNAME` запись: `admin.hitmanki.store` → `hitmanki.store`
+     - `CNAME` запись: `api.hitmanki.store` → `hitmanki.store`
 
-2. **Build and Deploy**
+2. **SSL сертификаты**
 ```bash
-# Build frontend assets
-cd frontend && npm run build
-cd admin && npm run build
+# Установите Certbot
+sudo apt install certbot python3-certbot-nginx
 
-# Start production services
-docker-compose -f docker-compose.prod.yml up -d
+# Получите SSL сертификаты
+sudo certbot certonly --standalone -d hitmanki.store -d admin.hitmanki.store -d api.hitmanki.store
+
+# Скопируйте сертификаты в docker/ssl/
+sudo cp /etc/letsencrypt/live/hitmanki.store/fullchain.pem docker/ssl/hitmanki.store.crt
+sudo cp /etc/letsencrypt/live/hitmanki.store/privkey.pem docker/ssl/hitmanki.store.key
+```
+
+3. **Конфигурация Production**
+```bash
+# Скопируйте и настройте переменные окружения
+cd docker
+cp .env.production .env
+# Отредактируйте .env с вашими реальными данными
+
+# Сгенерируйте ключи Laravel
+cd ../frontend && php artisan key:generate
+cd ../admin && php artisan key:generate
+```
+
+4. **Развертывание**
+```bash
+# Запустите production версию
+cd docker
+docker-compose -f docker-compose.production.yml up -d
+
+# Выполните миграции
+docker-compose exec frontend php artisan migrate --force
+docker-compose exec admin php artisan migrate --force
 ```
 
 3. **Security Considerations**
