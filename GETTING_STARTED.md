@@ -83,6 +83,8 @@ su - hitmanki
 cd ~/hitmanki-cases
 ./fix-laravel-files.sh
 
+# Скрипт создаст все необходимые файлы для Laravel 10
+
 # Перейдите в docker папку
 cd docker
 

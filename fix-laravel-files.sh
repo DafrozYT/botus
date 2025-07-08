@@ -13,6 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}🔧 Исправление недостающих файлов Laravel...${NC}"
+echo -e "${BLUE}Создание файлов совместимых с Laravel 10${NC}"
 echo
 
 print_success() {
