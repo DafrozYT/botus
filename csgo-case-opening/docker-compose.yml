@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
+    depends_on:
+      - backend
+    networks:
+      - csgo-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=csgocaseopening2024
+      - DB_NAME=csgo_case_opening
+      - STEAM_API_KEY=${STEAM_API_KEY}
+      - MARKET_API_KEY=${MARKET_API_KEY}
+      - SESSION_SECRET=${SESSION_SECRET}
+      - STEAM_RETURN_URL=http://localhost:5000/auth/steam/return
+      - STEAM_REALM=http://localhost:5000/
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - csgo-network
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=csgocaseopening2024
+      - MYSQL_DATABASE=csgo_case_opening
+      - MYSQL_USER=csgo_user
+      - MYSQL_PASSWORD=csgo_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/sample_data.sql:/docker-entrypoint-initdb.d/02-sample_data.sql
+    ports:
+      - "3306:3306"
+    networks:
+      - csgo-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - csgo-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - csgo-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  csgo-network:
+    driver: bridge
